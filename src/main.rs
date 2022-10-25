@@ -10,6 +10,7 @@ pub struct DeleteOptions {
     pub allow_delete_above_start: bool,
     pub enter_symlinks: bool,
     pub verbose: bool,
+    pub allow_hidden_files: bool,
     pub starting_dir: PathBuf,
 }
 
@@ -39,8 +40,8 @@ fn is_mountpoint(path: &Path) -> bool {
 }
 
 fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
-    // check if path is a symlink
     let path = Path::new(path);
+    // check if path is a symlink
     if path.is_symlink() {
         if !options.enter_symlinks {
             println!("{} is a symlink, skipping", path.display());
@@ -51,6 +52,13 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
     if !options.allow_delete_above_start {
         if !path.canonicalize().unwrap().starts_with(&options.starting_dir) {
             println!("{} is above starting dir, skipping", path.display());
+            return Err(());
+        }
+    }
+    // check if this is a hidden file or directory
+    if !options.allow_hidden_files {
+        if path.file_name().unwrap().to_str().unwrap().starts_with('.') {
+            println!("{} is a hidden file, skipping", path.display());
             return Err(());
         }
     }
@@ -84,6 +92,14 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
             return Err(());
         }
     }
+    // delete path
+    if options.verbose { println!("deleting {}", path.display()); }
+    if !options.dryrun {
+        let res = std::fs::remove_file(path);
+        if res.is_err() {
+            println!("error deleting {}: {}", path.display(), res.unwrap_err());
+        }
+    } else if options.verbose { println!("(dryrun) did nothing"); }
 
     Ok(())
 }
@@ -119,6 +135,10 @@ fn main() {
         Invoker::DashAndDoubleDash("v", "verbose"),
         "print more information"
     );
+    let f_allow_hidden_files = cmd.add_flag(
+        Invoker::DashAndDoubleDash("h", "allow-hidden-files"),
+        "allow deleting hidden files/folders"
+    );
 
     let f_help = cmd.add_flag(
         Invoker::DashAndDoubleDash("h", "help"),
@@ -151,6 +171,7 @@ fn main() {
     let allow_delete_above_start = input.flags.contains(&f_allow_delete_above_start);
     let enter_symlinks = input.flags.contains(&f_enter_symlinks);
     let verbose = input.flags.contains(&f_verbose);
+    let allow_hidden_files = input.flags.contains(&f_allow_hidden_files);
 
     // get real path
     let path = Path::new(&path);
@@ -164,6 +185,7 @@ fn main() {
         allow_delete_above_start,
         enter_symlinks,
         verbose,
+        allow_hidden_files,
         starting_dir: Path::new(&path).to_path_buf(),
     };
 
