@@ -161,6 +161,16 @@ Licensed under Apache 2.0", version).as_str(),
     );
 
     let a_path = cmd.add_argument(Invoker::NWithoutInvoker(0), "path");
+
+    let f_help = cmd.add_flag(
+        Invoker::DashAndDoubleDash("h", "help"),
+        "display this help message"
+    );
+
+    let f_dryrun = cmd.add_flag(
+        Invoker::DashAndDoubleDash("d", "dryrun"),
+        "don't actually delete anything"
+    );
     let f_recursive = cmd.add_flag(
         Invoker::DashAndDoubleDash("r", "recursive"),
         "delete directories"
@@ -169,35 +179,27 @@ Licensed under Apache 2.0", version).as_str(),
         Invoker::DashAndDoubleDash("u", "umount"),
         "unmount all found mount points"
     );
-    let f_dryrun = cmd.add_flag(
-        Invoker::DashAndDoubleDash("d", "dryrun"),
-        "don't actually delete anything"
-    );
-    let f_allow_delete_above_start = cmd.add_flag(
-        Invoker::DashAndDoubleDash("a", "allow-delete-above-start"),
-        "allow deleting files above the directory specified"
-    );
     let f_enter_symlinks = cmd.add_flag(
         Invoker::DashAndDoubleDash("s", "enter-symlinks"),
         "allow traversing symbolic links"
-    );
-    let f_verbose = cmd.add_flag(
-        Invoker::DashAndDoubleDash("v", "verbose"),
-        "print more information"
-    );
-    let f_allow_hidden_files = cmd.add_flag(
-        Invoker::DashAndDoubleDash("h", "allow-hidden-files"),
-        "allow deleting hidden files/folders"
     );
     let f_remove_symlinks = cmd.add_flag(
         Invoker::DashAndDoubleDash("rs", "remove-symlinks"),
         "remove symbolic links"
     );
-
-    let f_help = cmd.add_flag(
-        Invoker::DashAndDoubleDash("h", "help"),
-        "display this help message"
+    let f_allow_delete_above_start = cmd.add_flag(
+        Invoker::DashAndDoubleDash("a", "allow-delete-above-start"),
+        "allow deleting files above the directory specified"
     );
+    let f_allow_hidden_files = cmd.add_flag(
+        Invoker::DashAndDoubleDash("ah", "allow-hidden-files"),
+        "allow deleting hidden files/folders"
+    );
+    let f_verbose = cmd.add_flag(
+        Invoker::DashAndDoubleDash("v", "verbose"),
+        "print more information"
+    );
+
 
     let c_default = cmd.add_command(
         Invoker::Default,
