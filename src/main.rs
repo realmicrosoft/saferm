@@ -120,7 +120,8 @@ fn main() {
         "saferm",
         "\
 a way to delete files with less worry of destroying your system\n\
-(c) 2022 Real Microsoft, LLC",
+(c) 2022 Real Microsoft, LLC\n\
+Licensed under Apache 2.0",
     );
 
     let a_path = cmd.add_argument(Invoker::NWithoutInvoker(0), "path");
