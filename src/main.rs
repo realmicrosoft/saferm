@@ -11,6 +11,7 @@ pub struct DeleteOptions {
     pub enter_symlinks: bool,
     pub verbose: bool,
     pub allow_hidden_files: bool,
+    pub remove_symlinks: bool,
     pub starting_dir: PathBuf,
 }
 
@@ -43,6 +44,16 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
     let path = Path::new(path);
     // check if path is a symlink
     if path.is_symlink() {
+        // if we are supposed to remove symlinks, remove it
+        if options.remove_symlinks {
+            println!("removing symlink {}", path.display());
+            if !options.dryrun {
+                std::fs::remove_file(path).unwrap();
+            } else {
+                println!("(dryrun) did nothing");
+            }
+            return Ok(());
+        }
         if !options.enter_symlinks {
             println!("{} is a symlink, skipping", path.display());
             return Err(());
@@ -57,7 +68,7 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
     }
     // check if this is a hidden file or directory
     if !options.allow_hidden_files {
-        if path.file_name().unwrap().to_str().unwrap().starts_with('.') {
+        if path.file_name().unwrap_or("".as_ref()).to_str().unwrap_or("").starts_with(".") {
             println!("{} is a hidden file, skipping", path.display());
             return Err(());
         }
@@ -139,6 +150,10 @@ fn main() {
         Invoker::DashAndDoubleDash("h", "allow-hidden-files"),
         "allow deleting hidden files/folders"
     );
+    let f_remove_symlinks = cmd.add_flag(
+        Invoker::DashAndDoubleDash("rs", "remove-symlinks"),
+        "remove symbolic links"
+    );
 
     let f_help = cmd.add_flag(
         Invoker::DashAndDoubleDash("h", "help"),
@@ -172,10 +187,19 @@ fn main() {
     let enter_symlinks = input.flags.contains(&f_enter_symlinks);
     let verbose = input.flags.contains(&f_verbose);
     let allow_hidden_files = input.flags.contains(&f_allow_hidden_files);
+    let remove_symlinks = input.flags.contains(&f_remove_symlinks);
 
     // get real path
     let path = Path::new(&path);
-    let path = path.canonicalize().unwrap();
+    //let path = path.canonicalize().unwrap();
+    // if path doesn't start with /, get working dir and append it
+    let path = if path.starts_with("/") {
+        path.to_path_buf()
+    } else {
+        let mut path_a = std::env::current_dir().unwrap();
+        path_a.push(path);
+        path_a
+    };
     let path = path.to_str().unwrap();
 
     let delete_options = DeleteOptions {
@@ -186,6 +210,7 @@ fn main() {
         enter_symlinks,
         verbose,
         allow_hidden_files,
+        remove_symlinks,
         starting_dir: Path::new(&path).to_path_buf(),
     };
 
@@ -201,5 +226,5 @@ fn main() {
         return;
     }
 
-    let result = delete(&path, &delete_options);
+    let result = delete(path, &delete_options);
 }
