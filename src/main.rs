@@ -118,7 +118,9 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
 fn main() {
     let mut cmd = CommandInterface::new(
         "saferm",
-        "a way to delete files with less worry of destroying your system",
+        "\
+a way to delete files with less worry of destroying your system\n\
+(c) 2022 Real Microsoft, LLC",
     );
 
     let a_path = cmd.add_argument(Invoker::NWithoutInvoker(0), "path");
@@ -188,6 +190,10 @@ fn main() {
     let verbose = input.flags.contains(&f_verbose);
     let allow_hidden_files = input.flags.contains(&f_allow_hidden_files);
     let remove_symlinks = input.flags.contains(&f_remove_symlinks);
+
+    if dryrun {
+        println!("(dryrun) will not delete anything");
+    }
 
     // get real path
     let path = Path::new(&path);
