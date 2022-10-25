@@ -40,6 +40,40 @@ fn is_mountpoint(path: &Path) -> bool {
     }
 }
 
+/// unmounts a path, and if that fails then tries again lazily before panicing
+fn unmount(path: &Path) {
+    use libc::*;
+    let path_cstr = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
+    let mut flags = 0;
+    // this will be different on macos and linux
+    #[cfg(target_os = "linux")]
+    {
+        flags = MNT_DETACH;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        flags = MNT_FORCE;
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    {
+        panic!("unmount not implemented for this platform");
+    }
+    #[cfg(target_os = "linux")]
+    {
+        if unsafe { umount2(path_cstr.as_ptr(), flags) } != 0 {
+            if unsafe { umount2(path_cstr.as_ptr(), flags | MNT_FORCE) } != 0 {
+                panic!("failed to unmount {}", path.display());
+            }
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        if unsafe { unmount(path_cstr.as_ptr(), flags) } != 0 {
+            panic!("failed to unmount {}", path.display());
+        }
+    }
+}
+
 fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
     let path = Path::new(path);
     // check if path is a symlink
@@ -78,7 +112,7 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
         if options.umount {
             println!("{} is a mount point, unmounting", path.display());
             if !options.dryrun {
-                //umount(path).unwrap();
+                unmount(path);
             } else {
                 println!("(dryrun) did nothing");
             }
