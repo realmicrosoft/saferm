@@ -1,7 +1,13 @@
 [package]
 name = "saferm"
+description = "a way to delete files with less worry of destroying your system"
 version = "0.1.0"
 edition = "2021"
+authors = ["Real Microsoft", "husky (fekhesk)"]
+homepage = "https://github.com/realmicrosoft/saferm"
+repository = "https://github.com/realmicrosoft/saferm"
+license = "Apache-2.0"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

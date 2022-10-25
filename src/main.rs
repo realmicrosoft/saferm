@@ -150,12 +150,14 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
 }
 
 fn main() {
+    let version = env!("CARGO_PKG_VERSION");
     let mut cmd = CommandInterface::new(
         "saferm",
-        "\
+        format!("\
 a way to delete files with less worry of destroying your system\n\
+v{}\n\
 (c) 2022 Real Microsoft, LLC\n\
-Licensed under Apache 2.0",
+Licensed under Apache 2.0", version).as_str(),
     );
 
     let a_path = cmd.add_argument(Invoker::NWithoutInvoker(0), "path");
