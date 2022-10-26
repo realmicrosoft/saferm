@@ -132,6 +132,19 @@ fn delete(path: &str, options: &DeleteOptions) -> Result<(), ()> {
                 let path = entry.path();
                 let _ = delete(path.to_str().unwrap(), options);
             }
+            // if directory is empty, remove it
+            if std::fs::read_dir(path).unwrap().next().is_none() {
+                println!("removing directory {}", path.display());
+                if !options.dryrun {
+                    std::fs::remove_dir(path).unwrap();
+                } else {
+                    println!("(dryrun) did nothing");
+                }
+                return Ok(());
+            } else {
+                println!("{} is not empty after recursion, skipping", path.display());
+                return Err(());
+            }
         } else {
             println!("{} is a directory, skipping", path.display());
             return Err(());
